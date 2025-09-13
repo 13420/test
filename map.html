@@ -31,23 +31,30 @@
   <button id="sendBtn">📢 测试发送消息</button>
 
   <script>
-    document.getElementById("sendBtn").addEventListener("click", () => {
-      console.log("📢 按钮点击");
-
+    function sendMessage() {
       const data = { type: "test", msg: "Hello from H5!" };
 
       if (window.WeixinJSBridge) {
-        // ✅ 优先使用 WeixinJSBridge
+        console.log("✅ WeixinJSBridge 可用，准备发送");
         WeixinJSBridge.invoke('postMessage', data);
-        console.log("✅ 使用 WeixinJSBridge.invoke 发送消息");
       } else if (window.parent) {
-        // 兜底用 postMessage
+        console.log("⚠️ WeixinJSBridge 不存在，退回 window.parent.postMessage");
         window.parent.postMessage([data], "*");
-        console.log("✅ 使用 window.parent.postMessage 发送消息");
       } else {
-        console.error("❌ 没有找到消息通道");
+        console.error("❌ 无法找到消息通道");
       }
-    });
+    }
+
+    document.getElementById("sendBtn").addEventListener("click", sendMessage);
+
+    // 关键：监听 WeixinJSBridgeReady，保证桥接可用
+    if (typeof WeixinJSBridge === "undefined") {
+      document.addEventListener('WeixinJSBridgeReady', () => {
+        console.log("✅ WeixinJSBridgeReady 事件触发");
+      }, false);
+    } else {
+      console.log("✅ WeixinJSBridge 已存在");
+    }
   </script>
 </body>
 </html>
