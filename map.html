@@ -3,26 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>WebView Test</title>
+  <title>测试 WeixinJSBridge</title>
+  <link rel="icon" href="data:;base64,=">
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f0f0f0;
+      font-family: sans-serif;
+    }
+    #sendBtn {
+      background: #07c160;
+      color: white;
+      border: none;
+      border-radius: 30px;
+      padding: 12px 24px;
+      font-size: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    }
+  </style>
 </head>
 <body>
-  <h1 style="text-align:center;">✅ WebView 加载成功</h1>
-  <button id="sendBtn" style="
-    display:block;
-    margin:30px auto;
-    padding:10px 20px;
-    background:#07c160;
-    color:#fff;
-    border:none;
-    border-radius:8px;
-    font-size:16px;
-  ">发送消息</button>
+  <button id="sendBtn">📢 测试发送消息</button>
 
   <script>
     document.getElementById("sendBtn").addEventListener("click", () => {
-      console.log("📢 按钮点击，开始发送消息");
-      window.parent.postMessage([{ type: "test", msg: "Hello from H5!" }], "*");
-      console.log("✅ 已调用 postMessage");
+      console.log("📢 按钮点击");
+
+      const data = { type: "test", msg: "Hello from H5!" };
+
+      if (window.WeixinJSBridge) {
+        // ✅ 优先使用 WeixinJSBridge
+        WeixinJSBridge.invoke('postMessage', data);
+        console.log("✅ 使用 WeixinJSBridge.invoke 发送消息");
+      } else if (window.parent) {
+        // 兜底用 postMessage
+        window.parent.postMessage([data], "*");
+        console.log("✅ 使用 window.parent.postMessage 发送消息");
+      } else {
+        console.error("❌ 没有找到消息通道");
+      }
     });
   </script>
 </body>
