@@ -4,7 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>深色地图</title>
-<link rel="icon" href="data:;base64,=">
 <style>
 html, body, #container {
   width: 100%;
@@ -12,37 +11,20 @@ html, body, #container {
   margin: 0;
   padding: 0;
 }
-#captureBtn {
-  position: absolute;
-  bottom: 20px;
-  right: 20px;
-  z-index: 999;
-  background: #07c160;
-  color: #785151;
-  border: none;
-  border-radius: 30px;
-  padding: 10px 20px;
-  font-size: 16px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-  cursor: pointer;
-}
 </style>
 
 <!-- 腾讯地图 JS API v2 -->
 <script>
-  function loadMapApi() {
-    const script = document.createElement('script');
-    script.src = "https://map.qq.com/api/js?v=2.exp&key=OB4BZ-D4W3U-B7VVO-4PJWW-6TKDJ-WPB77&callback=initMap";
-    script.async = true;
-    document.body.appendChild(script);
-  }
+function loadMapApi() {
+  const script = document.createElement('script');
+  script.src = "https://map.qq.com/api/js?v=2.exp&key=OB4BZ-D4W3U-B7VVO-4PJWW-6TKDJ-WPB77&callback=initMap";
+  script.async = true;
+  document.body.appendChild(script);
+}
 </script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
 <div id="container"></div>
-<button id="captureBtn">📷 保存地图</button>
 
 <script>
 let map = null;
@@ -63,8 +45,8 @@ function initMap() {
     scaleControl: false,       // 关闭比例尺
     mapTypeControl: false,     // 关闭卫星切换
     panControl: false,         // 关闭平移控件
-    draggable: true,           // 保留拖拽手势
-    scrollwheel: true          // 保留滚轮缩放
+    draggable: true,
+    scrollwheel: true
   });
 
   // 绘制城市点
@@ -75,30 +57,6 @@ function initMap() {
       title: p.city
     });
   });
-
-  document.getElementById("captureBtn").addEventListener("click", async () => {
-  try {
-    const canvas = await html2canvas(document.querySelector("#container"), {
-      useCORS: true,
-      scale: 2
-    });
-    const imgData = canvas.toDataURL("image/png");
-    console.log("✅ html2canvas 截图完成，base64 长度:", imgData.length);
-
-    // 直接在浏览器触发下载
-    const link = document.createElement("a");
-    link.href = imgData;
-    link.download = "map-screenshot.png";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    console.log("✅ 已触发浏览器下载");
-  } catch (err) {
-    console.error("❌ 截图失败:", err);
-  }
-});
-
 }
 
 // 开始加载地图API
@@ -106,4 +64,3 @@ loadMapApi();
 </script>
 </body>
 </html>
-
