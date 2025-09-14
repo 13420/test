@@ -1,60 +1,150 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>测试 WeixinJSBridge</title>
-  <link rel="icon" href="data:;base64,=">
-  <style>
-    html, body {
-      height: 100%;
-      margin: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: #f0f0f0;
-      font-family: sans-serif;
-    }
-    #sendBtn {
-      background: #07c160;
-      color: white;
-      border: none;
-      border-radius: 30px;
-      padding: 12px 24px;
-      font-size: 16px;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.3);
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>深色地图</title>
+<link rel="icon" href="data:;base64,=">
+<style>
+html, body, #container {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+#captureBtn {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  z-index: 999;
+  background: #07c160;
+  color: #785151;
+  border: none;
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 16px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+  cursor: pointer;
+}
+</style>
+
+<!-- 腾讯地图 JS API v2 -->
+<script>
+  function loadMapApi() {
+    const script = document.createElement('script');
+    script.src = "https://map.qq.com/api/js?v=2.exp&key=OB4BZ-D4W3U-B7VVO-4PJWW-6TKDJ-WPB77&callback=initMap";
+    script.async = true;
+    document.body.appendChild(script);
+  }
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
-  <button id="sendBtn">📢 测试发送消息</button>
+<div id="container"></div>
+<button id="captureBtn">📷 保存地图</button>
 
-  <script>
-    function sendMessage() {
-      const data = { type: "test", msg: "Hello from H5!" };
+<script>
+let map = null;
 
-      if (window.WeixinJSBridge) {
-        console.log("✅ WeixinJSBridge 可用，准备发送");
-        WeixinJSBridge.invoke('postMessage', data);
-      } else if (window.parent) {
-        console.log("⚠️ WeixinJSBridge 不存在，退回 window.parent.postMessage");
-        window.parent.postMessage([data], "*");
-      } else {
-        console.error("❌ 无法找到消息通道");
-      }
-    }
+// H5传参解析
+const params = new URLSearchParams(location.search);
+const path = JSON.parse(decodeURIComponent(params.get('path')));
 
-    document.getElementById("sendBtn").addEventListener("click", sendMessage);
+// 初始化地图回调
+function initMap() {
+  // 创建地图，关闭所有控件
+  map = new qq.maps.Map(document.getElementById("container"), {
+    center: new qq.maps.LatLng(path[0].lat, path[0].lng),
+    zoom: 5,
+    mapTypeId: qq.maps.MapTypeId.ROADMAP,
+    mapStyleId: 'style2',      // 官方暗色样式
+    zoomControl: false,        // 关闭缩放按钮
+    scaleControl: false,       // 关闭比例尺
+    mapTypeControl: false,     // 关闭卫星切换
+    panControl: false,         // 关闭平移控件
+    draggable: true,           // 保留拖拽手势
+    scrollwheel: true          // 保留滚轮缩放
+  });
 
-    // 关键：监听 WeixinJSBridgeReady，保证桥接可用
-    if (typeof WeixinJSBridge === "undefined") {
-      document.addEventListener('WeixinJSBridgeReady', () => {
-        console.log("✅ WeixinJSBridgeReady 事件触发");
-      }, false);
-    } else {
-      console.log("✅ WeixinJSBridge 已存在");
-    }
-  </script>
+  // 绘制城市点
+  path.forEach(p => {
+    new qq.maps.Marker({
+      position: new qq.maps.LatLng(p.lat, p.lng),
+      map: map,
+      title: p.city
+    });
+  });
+
+  document.getElementById("captureBtn").addEventListener("click", async () => {
+  try {
+    const canvas = await html2canvas(document.querySelector("#container"), {
+      useCORS: true,
+      scale: 2
+    });
+    const imgData = canvas.toDataURL("image/png");
+    console.log("✅ html2canvas 截图完成，base64 长度:", imgData.length);
+
+    // 直接在浏览器触发下载
+    const link = document.createElement("a");
+    link.href = imgData;
+    link.download = "map-screenshot.png";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    console.log("✅ 已触发浏览器下载");
+  } catch (err) {
+    console.error("❌ 截图失败:", err);
+  }
+});
+
+}
+
+// 开始加载地图API
+loadMapApi();
+</script>
 </body>
 </html>
+//map.js
+window.onload = function() {
+  const params = new URLSearchParams(location.search);
+  const path = JSON.parse(decodeURIComponent(params.get('path')));
+
+  const map = new TMap.Map("container", {
+    center: new TMap.LatLng(path[0].lat, path[0].lng),
+    zoom: 5,
+    pitch: 0,
+    rotation: 0,
+    mapStyleId: "style1"
+  });
+
+  // 放大地图地名字体
+  map.setMapStyle({
+    "featureType": "all",
+    "elementType": "labels.text.fill",
+    "stylers": {
+      "fontSize": "16px",
+      "color": "#ffffff"
+    }
+  });
+
+  // 画城市点
+  new TMap.MultiMarker({
+    map,
+    geometries: path.map(p => ({
+      id: p.city,
+      position: new TMap.LatLng(p.lat, p.lng)
+    }))
+  });
+
+  // H5 悬浮按钮截图
+  document.getElementById("captureBtn").addEventListener("click", async () => {
+    const canvas = await html2canvas(document.querySelector("#container"), {
+      useCORS: true,
+      scale: 2
+    });
+    const imgData = canvas.toDataURL("image/png");
+    window.parent.postMessage({ type: "screenshot", img: imgData }, "*");
+  });
+};
